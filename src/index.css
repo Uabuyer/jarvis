@@ -1,12 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap');
 
 :root {
-  /* The interface cyan. `--accent` is re-declared per phase and per panel;
-     this one stays put and is what anything neutral pins itself to. */
-  --interface: #00e5ff;
+  /* The brand orange. `--accent` is re-declared per phase and per panel; this
+     one stays put and is what anything neutral pins itself to. */
+  --interface: #ff8a1f;
   --accent: var(--interface);
-  --bg: #01060c;
-  font-family: 'Chakra Petch', system-ui, sans-serif;
+  --bg: #0a0604;
+  --ink: #fff6ea;
+  --muted: #b9a48f;
+  --display: 'Unbounded', 'Manrope', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
   color-scheme: dark;
 }
 
@@ -23,29 +26,12 @@ body,
   overflow: hidden;
 }
 
-/* Faint scanlines + radial falloff so the 3D never sits on flat black. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 5;
-  background:
-    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.55) 100%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 229, 255, 0.028) 0px,
-      rgba(0, 229, 255, 0.028) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-}
-
 .scene {
   position: fixed;
   inset: 0;
   z-index: 1;
 }
+
 
 /* --------------------------------------------------------------------- HUD */
 
@@ -56,156 +42,150 @@ body::after {
   pointer-events: none;
   color: var(--accent);
   transition: color 600ms ease;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 11px;
+  font-size: 13px;
 }
-
-.corner {
-  position: absolute;
-  width: 46px;
-  height: 46px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  opacity: 0.8;
-}
-.corner-tl { top: 26px; left: 26px; border-right: 0; border-bottom: 0; }
-.corner-tr { top: 26px; right: 26px; border-left: 0; border-bottom: 0; }
-.corner-bl { bottom: 26px; left: 26px; border-right: 0; border-top: 0; }
-.corner-br { bottom: 26px; right: 26px; border-left: 0; border-top: 0; }
 
 .hud-top {
   position: absolute;
-  top: 44px;
-  left: 0;
-  right: 0;
+  top: 28px;
+  left: 36px;
+  right: 36px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 0 92px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .brand-mark {
-  display: block;
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: 0.42em;
-  text-shadow: 0 0 22px color-mix(in srgb, var(--accent) 70%, transparent);
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
 .brand-sub {
-  display: block;
-  margin-top: 5px;
-  font-size: 9px;
-  letter-spacing: 0.22em;
-  opacity: 0.42;
+  padding: 3px 9px 4px;
+  border-radius: 7px;
+  background: linear-gradient(120deg, #ffc42e, #ff8a1f);
+  color: #150a02;
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 800;
 }
 
 .status {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 10px;
-  /* The header is space-between, so with the wordmark hidden the status line
-     would slide to the left edge on its own. Claiming the free space keeps it
-     pinned right whether or not the brand is there — and with both present it
-     changes nothing, since space-between had already used that space up. */
   margin-left: auto;
+  padding: 8px 15px 8px 13px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(16, 9, 4, 0.62);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 26px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+  font-weight: 600;
+  transition: border-color 400ms ease, box-shadow 400ms ease;
 }
 
+.status-text { display: inline-block; white-space: nowrap; }
+
 .dot {
-  width: 7px;
-  height: 7px;
+  flex: none;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 12px var(--accent);
-  animation: pulse 1.8s ease-in-out infinite;
+  animation: pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(0.75); }
+  50% { opacity: 0.45; transform: scale(0.7); }
 }
 
-/* Side rails */
-
+/* What is connected, low on the left. */
 .rail {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
-  flex-direction: column;
-  gap: 9px;
-  font-size: 10px;
+  font-size: 12px;
 }
-.rail-left { left: 92px; }
-.rail-right { right: 92px; align-items: flex-end; }
+
+.rail-left {
+  left: 36px;
+  bottom: 30px;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 24vw;
+}
 
 .rail-title {
-  font-size: 8px;
-  opacity: 0.4;
-  letter-spacing: 0.34em;
-  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .rail-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  opacity: 0.82;
+  gap: 7px;
+  color: var(--ink);
+  opacity: 0.86;
 }
-.rail-item.dim { opacity: 0.3; }
-.rail-item.mono { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
+.rail-item.dim { opacity: 0.4; }
 
 .tick {
-  width: 5px;
-  height: 5px;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: var(--accent);
-  transform: rotate(45deg);
-  box-shadow: 0 0 8px var(--accent);
 }
 
-.meter {
-  width: 3px;
-  height: 96px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  display: flex;
+/* The voice, as a small equaliser under the status pill. */
+.rail-right {
+  top: 78px;
+  right: 40px;
   align-items: flex-end;
-  margin: 4px 0;
+  gap: 3px;
+  height: 26px;
 }
 
-.meter-fill {
-  width: 100%;
+.eq-bar {
+  width: 4px;
+  height: 100%;
+  border-radius: 4px;
   background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-  transition: height 90ms linear;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+  transform-origin: bottom;
+  transition: transform 90ms linear;
 }
 
 /* Tool badge */
 
-/* The tool readout. This is the moment the interface proves it did something
-   real, so it's set as a headline under the reactor rather than a chip on top
-   of it — no box, no backdrop, just light. */
 .tool-badge {
   position: absolute;
-  /* Pinned near the top, in its own band with the rest of the status chrome.
-     The centring (x: -50%) is a framer motion prop in Hud.tsx, not here —
-     framer writes `transform` inline on an animated element and would overwrite
-     anything declared in CSS. */
-  top: 74px;
+  /* Centring (x: -50%) is a framer prop in Hud.tsx: framer owns `transform`. */
+  top: 28px;
   left: 50%;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 14px;
+  gap: 11px;
   white-space: nowrap;
-  padding: 7px 16px 7px 14px;
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--accent) 9%, rgba(2, 10, 12, 0.55));
-  backdrop-filter: blur(5px);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 22%, transparent);
-  /* Above the panels and the log so a long tool name reads cleanly, but it is a
-     thin chip that never enters the transcript's space to begin with. */
+  padding: 8px 16px 8px 13px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ffc42e, #ff8a1f);
+  box-shadow: 0 8px 34px -8px rgba(255, 138, 31, 0.8);
+  color: #150a02;
   z-index: 6;
 }
 
@@ -213,36 +193,22 @@ body::after {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 8px;
-  letter-spacing: 0.36em;
-  text-indent: 0.36em;
-  opacity: 0.6;
-  padding-right: 12px;
-  border-right: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .tool-name {
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.24em;
-  text-indent: 0.24em;
-  /* Bounded so a long name truncates rather than stretching the chip off-frame. */
-  max-width: min(52vw, 620px);
+  font-size: 13px;
+  font-weight: 500;
+  max-width: min(46vw, 560px);
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #f2fbff;
-  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-
-@media (max-width: 1100px) {
-  .tool-name { font-size: 12px; letter-spacing: 0.18em; max-width: 60vw; }
-  .tool-badge { top: 60px; }
 }
 
 .spinner {
-  width: 9px;
-  height: 9px;
-  border: 1px solid var(--accent);
+  width: 11px;
+  height: 11px;
+  border: 2px solid #150a02;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -257,37 +223,34 @@ body::after {
 .log {
   position: absolute;
   left: 50%;
-  bottom: 132px;
+  bottom: 92px;
   transform: translateX(-50%);
-  width: min(760px, 68vw);
+  width: min(720px, 56vw);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  text-transform: none;
-  letter-spacing: 0.01em;
+  gap: 10px;
 }
 
 .log-line {
   display: flex;
-  gap: 14px;
-  align-items: baseline;
-  font-size: 14px;
-  line-height: 1.55;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 15px;
+  line-height: 1.45;
+  text-align: center;
 }
 
 .log-who {
-  flex: 0 0 54px;
-  font-size: 8px;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  opacity: 0.45;
-  padding-top: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
 }
 
-.log-user .log-text { opacity: 0.52; }
+.log-user .log-text { color: var(--muted); }
 .log-jarvis .log-text {
-  color: #eaf9ff;
-  text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--ink);
+  font-weight: 500;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
 }
 
 /* Live partial transcript while listening */
@@ -295,46 +258,49 @@ body::after {
 .caption {
   position: absolute;
   left: 50%;
-  bottom: 88px;
+  bottom: 58px;
   transform: translateX(-50%);
-  font-size: 16px;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  color: #fff;
-  opacity: 0.85;
-  max-width: 66vw;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 62vw;
   text-align: center;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
 }
 
 .error {
   position: absolute;
   left: 50%;
-  bottom: 52px;
+  bottom: 56px;
   transform: translateX(-50%);
-  color: #ff6b6b;
-  font-size: 10px;
-  text-transform: none;
-  letter-spacing: 0.04em;
-  max-width: 70vw;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: rgba(40, 8, 8, 0.8);
+  color: #ff8d8d;
+  font-size: 12px;
+  max-width: 62vw;
   text-align: center;
 }
 
 .hud-bottom {
   position: absolute;
-  bottom: 44px;
+  bottom: 28px;
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 9px;
-  opacity: 0.38;
-  letter-spacing: 0.2em;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-kbd {
-  font-family: 'JetBrains Mono', monospace;
-  border: 1px solid currentColor;
-  padding: 1px 5px;
-  font-size: 9px;
+.hint b { color: var(--ink); font-weight: 600; }
+
+.hint kbd {
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 220, 180, 0.22);
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink);
 }
 
 /* ----------------------------------------------------------------- panels */
@@ -797,26 +763,19 @@ kbd {
 
 /* --------------------------------------------------------------- ignition */
 
+/* See-through, so the cold ball is already there behind the button. */
 .ignition {
   position: fixed;
   inset: 0;
   z-index: 7;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(ellipse at center, #04121c 0%, #01060c 70%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 9vh;
+  background: transparent;
   border: 0;
   cursor: pointer;
   font-family: inherit;
-  color: #4fd6ff;
-}
-
-.ignition-ring {
-  position: absolute;
-  width: 240px;
-  height: 240px;
-  border: 1px solid rgba(79, 214, 255, 0.28);
-  border-top-color: rgba(79, 214, 255, 0.9);
-  border-radius: 50%;
 }
 
 .ignition-label {
@@ -827,21 +786,49 @@ kbd {
 }
 
 .ignition-word {
-  font-size: 15px;
-  letter-spacing: 0.52em;
-  text-indent: 0.52em; /* balance the trailing letter-space */
-  text-shadow: 0 0 30px rgba(79, 214, 255, 0.7);
+  position: relative;
+  overflow: hidden;
+  padding: 15px 38px 16px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #ffc42e, #ff8a1f);
+  color: #150a02;
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 12px 44px -10px rgba(255, 138, 31, 0.9);
+  transition: transform 220ms cubic-bezier(0.3, 1.6, 0.5, 1), box-shadow 220ms ease;
+  animation: ignitionBeat 2.2s ease-in-out infinite;
+}
+
+.ignition-word::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  left: -60%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: ignitionSheen 2.8s ease-in-out infinite;
 }
 
 .ignition-sub {
-  font-size: 9px;
-  letter-spacing: 0.28em;
-  opacity: 0.4;
-  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .ignition:hover .ignition-word {
-  text-shadow: 0 0 44px rgba(79, 214, 255, 1);
+  transform: scale(1.06);
+  box-shadow: 0 16px 60px -8px rgba(255, 138, 31, 1);
+}
+
+@keyframes ignitionBeat {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.14); }
+}
+
+@keyframes ignitionSheen {
+  0%, 55% { left: -60%; }
+  100% { left: 130%; }
 }
 
 /* ------------------------------------------------------------------- boot */
@@ -851,165 +838,136 @@ kbd {
   inset: 0;
   z-index: 6;
   background: var(--bg);
-  color: var(--accent);
   overflow: hidden;
 }
 
-/* -- beat 1: the status bar -------------------------------------------- */
-
-.boot-bar {
+.boot-pool {
   position: absolute;
-  top: 12%;
-  left: 0;
-  right: 0;
-  padding: 0 min(9vw, 140px);
-  transition: opacity 0.6s ease, filter 0.6s ease;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 122, 18, 0.5), transparent 62%);
+  animation: bootDrift 9s ease-in-out infinite alternate;
 }
-.boot-bar-dim { opacity: 0.28; filter: blur(0.6px); }
+.boot-pool-a { top: -42vmax; left: -30vmax; }
+.boot-pool-b { bottom: -42vmax; right: -30vmax; animation-delay: -4s; }
 
-.boot-bar-frame {
-  position: relative;
-  border-top: 1.5px solid var(--accent);
-  border-bottom: 1.5px solid var(--accent);
-  padding: 14px 26px 12px;
-  clip-path: polygon(3% 0, 97% 0, 100% 42%, 97% 100%, 3% 100%, 0 42%);
-  box-shadow:
-    inset 0 0 40px color-mix(in srgb, var(--accent) 12%, transparent),
-    0 0 30px color-mix(in srgb, var(--accent) 18%, transparent);
+@keyframes bootDrift {
+  to { transform: translate(6vmax, 4vmax) scale(1.12); }
 }
 
-.boot-bar-title {
-  display: inline-flex;
-  align-items: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(18px, 3.4vw, 40px);
-  font-weight: 300;
-  letter-spacing: 0.14em;
-  color: #eafcff;
-  text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 60%, transparent);
-}
-.boot-dots { opacity: 0.6; margin: 0 0.2em; }
-.boot-cursor {
-  display: inline-block;
-  width: 0.6em;
-  height: 1.05em;
-  margin-left: 0.15em;
-  background: var(--accent);
-  animation: bootBlink 0.7s steps(1) infinite;
-}
-@keyframes bootBlink { 50% { opacity: 0 } }
-
-.boot-seg { display: flex; gap: 3px; margin-top: 12px; }
-.boot-seg-cell {
-  flex: 1;
-  height: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  transition: background 0.12s ease, box-shadow 0.12s ease;
-}
-.boot-seg-cell[data-on='1'] {
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-}
-
-.boot-log {
-  margin-top: 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  line-height: 1.9;
-  letter-spacing: 0.06em;
-  opacity: 0.6;
-}
-.boot-log-line { animation: bootLogIn 0.25s ease both; }
-.boot-log-line::before { content: '\203a  '; opacity: 0.5; }
-@keyframes bootLogIn { from { opacity: 0; transform: translateX(-8px) } }
-
-/* -- beats 2-4: the centre stage --------------------------------------- */
-
-.boot-stage {
+.boot-center {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
 }
-.boot-rings,
-.boot-suit,
-.boot-reactor {
-  width: min(58vmin, 520px);
-  height: min(58vmin, 520px);
+.boot-center > * { grid-area: 1 / 1; }
+
+.boot-target {
+  width: min(60vh, 72vw);
+  height: min(60vh, 72vw);
   overflow: visible;
 }
 
-.boot-ring {
-  fill: none;
-  stroke: var(--accent);
-  opacity: 0.8;
-  transform-box: fill-box;
-  transform-origin: center;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
+.boot-ring { fill: none; stroke: #ff8a1f; }
+.boot-ring-0 { stroke-width: 3; }
+.boot-ring-1 { stroke-width: 12; stroke: #5a2a08; }
+.boot-ring-2 { stroke-width: 3; }
+.boot-ring-3 { stroke-width: 10; stroke: #ffc42e; }
+
+.boot-shaft { stroke: #fff6ea; stroke-width: 5; stroke-linecap: round; }
+.boot-fletch { fill: #ffc42e; }
+.boot-bull { fill: #fff6ea; }
+
+.boot-shock {
+  width: min(30vh, 34vw);
+  height: min(30vh, 34vw);
+  border-radius: 50%;
+  border: 4px solid #ffc42e;
+  animation: bootShock 800ms cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
 }
+
+@keyframes bootShock {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(3.6); opacity: 0; }
+}
+
+.boot-count {
+  align-self: end;
+  margin-bottom: 5vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.boot-pct {
+  font-family: var(--display);
+  font-size: clamp(26px, 5vh, 50px);
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 24px #0a0604, 0 0 12px #0a0604;
+}
+
+.boot-word {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffc42e;
+  text-shadow: 0 0 12px #0a0604;
+}
+
 .boot-name {
-  fill: #eafcff;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px;
-  text-anchor: middle;
-  dominant-baseline: middle;
+  display: flex;
+  overflow: hidden;
+  padding: 0.1em 0.05em;
+  font-family: var(--display);
+  font-size: clamp(54px, 14vw, 190px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ink);
+  text-shadow: 0 8px 50px rgba(255, 122, 18, 0.65);
+}
+.boot-name span { display: block; }
+
+.boot-logo {
+  width: min(60vh, 76vw);
+  height: min(60vh, 76vw);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 90px -6px rgba(255, 138, 31, 0.75);
+}
+.boot-logo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.boot-halo {
+  width: min(70vh, 88vw);
+  height: min(70vh, 88vw);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 138, 31, 0.55), transparent 68%);
+  animation: bootHalo 1.5s ease-in-out infinite alternate;
 }
 
-.boot-wire {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.4;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 55%, transparent));
-}
-.boot-wire-dim { opacity: 0.4; stroke-width: 1; }
-.boot-suit-fig { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 40%, transparent)); }
-.boot-tag {
-  fill: var(--accent);
-  opacity: 0.55;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-anchor: middle;
+@keyframes bootHalo {
+  to { transform: scale(1.18); opacity: 0.65; }
 }
 
-.boot-r-seg {
-  stroke: color-mix(in srgb, var(--accent) 30%, transparent);
-  stroke-width: 8;
+.boot-dash {
+  border-radius: 50%;
+  border: 3px dashed rgba(255, 196, 46, 0.55);
+  animation: spin 24s linear infinite;
 }
-.boot-r-on { stroke: #dffbff; filter: drop-shadow(0 0 8px var(--accent)); }
-.boot-r-ring {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2;
-  opacity: calc(0.3 + var(--glow) * 0.6);
-}
-.boot-r-ring-in { stroke-width: 1.5; opacity: calc(0.2 + var(--glow) * 0.5); }
-.boot-r-tri {
-  fill: color-mix(in srgb, var(--accent) calc(var(--glow) * 45%), transparent);
-  stroke: #eafcff;
-  stroke-width: 3;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 calc(var(--glow) * 26px) var(--accent));
-}
-.boot-r-tri-in {
-  fill: color-mix(in srgb, #eafcff calc(var(--glow) * 60%), transparent);
-  stroke: none;
-}
-.boot-r-v {
-  fill: none;
-  stroke: #05161a;
-  stroke-width: 3.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  opacity: var(--glow);
+.boot-dash-a { width: min(68vh, 86vw); height: min(68vh, 86vw); }
+.boot-dash-b {
+  width: min(76vh, 94vw);
+  height: min(76vh, 94vw);
+  border-width: 1.5px;
+  animation-duration: 40s;
+  animation-direction: reverse;
 }
 
-@media (max-width: 900px) {
-  .hud-top { padding: 0 46px; }
-  .rail-left { left: 30px; }
-  .rail-right { right: 30px; }
-  .log { width: 84vw; }
+@media (prefers-reduced-motion: reduce) {
+  .boot-pool, .boot-halo, .boot-dash, .ignition-word, .ignition-word::after { animation: none; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1431,7 +1389,7 @@ kbd {
 }
 
 .fx-glitch::before { background: rgba(255, 40, 90, 0.13) }
-.fx-glitch::after  { background: rgba(40, 220, 255, 0.13); animation-direction: reverse }
+.fx-glitch::after  { background: rgba(255, 196, 46, 0.13); animation-direction: reverse }
 
 @keyframes fxChroma {
   0%, 100% { transform: translateX(0);    opacity: 0 }
@@ -1495,20 +1453,20 @@ kbd {
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
   padding: 0.75rem 0.9rem;
-  background: rgba(2, 10, 12, 0.94);
-  border: 1px solid var(--accent, #19d8d2);
+  background: rgba(14, 8, 4, 0.94);
+  border: 1px solid var(--accent, #ffb020);
   border-radius: 2px;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 0.72rem;
   line-height: 1.6;
-  color: #cfe6e3;
+  color: #efe0cf;
   pointer-events: none;
   backdrop-filter: blur(6px);
 }
 
 .diag-head {
   letter-spacing: 0.18em;
-  color: var(--accent, #19d8d2);
+  color: var(--accent, #ffb020);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding-bottom: 0.4rem;
   margin-bottom: 0.5rem;
@@ -1525,7 +1483,7 @@ kbd {
 .diag-sec {
   margin: 0.7rem 0 0.3rem;
   letter-spacing: 0.16em;
-  color: #6d8886;
+  color: #a8927c;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 0.45rem;
 }
@@ -1536,8 +1494,8 @@ kbd {
   gap: 0.5rem;
 }
 
-.diag-k { color: #6d8886; }
-.diag-v { color: #cfe6e3; overflow-wrap: anywhere; }
+.diag-k { color: #a8927c; }
+.diag-v { color: #efe0cf; overflow-wrap: anywhere; }
 .diag-ok { color: #3ef2a8; }
 .diag-bad { color: #ff6b6b; }
 
@@ -1564,6 +1522,7 @@ kbd {
 }
 
 .bl {
+  border-radius: 18px;
   position: absolute;
   pointer-events: auto;
   display: flex;
@@ -1572,8 +1531,8 @@ kbd {
   padding: 0;
   background: linear-gradient(
     160deg,
-    color-mix(in srgb, var(--accent) 11%, rgba(4, 12, 18, 0.94)),
-    color-mix(in srgb, var(--accent) 4%, rgba(2, 8, 12, 0.96))
+    color-mix(in srgb, var(--accent) 11%, rgba(20, 11, 5, 0.94)),
+    color-mix(in srgb, var(--accent) 4%, rgba(14, 8, 4, 0.96))
   );
   border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
   backdrop-filter: blur(14px);
@@ -1611,8 +1570,8 @@ kbd {
 }
 
 .bl-title {
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 13px;
+  font-weight: 700;
   color: color-mix(in srgb, var(--accent) 92%, white);
   white-space: nowrap;
   overflow: hidden;
@@ -1637,7 +1596,8 @@ kbd {
   font: inherit;
   font-size: 11px;
   line-height: 1;
-  padding: 4px 7px;
+  padding: 5px 8px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease;
 }
@@ -1688,7 +1648,7 @@ kbd {
   border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-.bl-markup { padding: 14px 16px; text-transform: none; letter-spacing: normal }
+.bl-markup { padding: 14px 16px; color: var(--ink); text-transform: none; letter-spacing: normal }
 
 .bl-note {
   padding: 22px;
@@ -1795,7 +1755,7 @@ kbd {
   letter-spacing: 0.18em;
   color: color-mix(in srgb, var(--accent) 90%, white);
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  background: color-mix(in srgb, var(--accent) 10%, rgba(2, 8, 12, 0.8));
+  background: color-mix(in srgb, var(--accent) 10%, rgba(14, 8, 4, 0.8));
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
@@ -1823,7 +1783,7 @@ kbd {
   min-width: 210px;
   padding: 11px 13px 9px;
   border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
-  background: color-mix(in srgb, var(--accent) 8%, rgba(2, 8, 12, 0.86));
+  background: color-mix(in srgb, var(--accent) 8%, rgba(14, 8, 4, 0.86));
   backdrop-filter: blur(10px);
   pointer-events: none;
   text-transform: none;
@@ -1845,10 +1805,9 @@ kbd {
 }
 .gguide-icon { width: 17px; font-size: 13px; line-height: 1; filter: saturate(0.2) }
 .gguide-name {
-  width: 44px;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  width: 74px;
+  font-size: 11px;
+  font-weight: 700;
   color: color-mix(in srgb, var(--accent) 95%, white);
 }
 .gguide-does { opacity: 0.68; font-size: 11px }
@@ -1895,4 +1854,51 @@ kbd {
   object-fit: cover;
   transform: scaleX(-1);
   background: #000;
+}
+
+/* ---------------------------------------------------------------------------
+   City alert badge, in the bottom right corner.
+   --------------------------------------------------------------------------- */
+
+.alert-badge {
+  --alert: #8a97a3;
+  position: absolute;
+  bottom: 28px;
+  right: 36px;
+  border-radius: 999px;
+  background: rgba(16, 9, 4, 0.62);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--alert);
+  background: color-mix(in srgb, var(--alert) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--alert) 40%, transparent);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.alert-badge[data-status='clear'] { --alert: #4ade80; }
+.alert-badge[data-status='active'] {
+  --alert: #ff4d4d;
+  font-weight: 600;
+  animation: alertPulse 1.4s ease-in-out infinite;
+}
+.alert-pin {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.alert-city { color: #fff6ea; font-weight: 600; }
+@keyframes alertPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.55); }
+  50% { box-shadow: 0 0 22px 4px rgba(255, 77, 77, 0.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alert-badge[data-status='active'] { animation: none; }
 }

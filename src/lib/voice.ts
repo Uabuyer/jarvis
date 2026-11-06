@@ -78,7 +78,7 @@ const WAKE_DEBOUNCE = 1500
  * indication why. Better a rare false wake than a name that does not answer.
  */
 const WAKE =
-  /\b(?:hey|hi|ok|okay|yo)?\s*(?:jarvis|jarvys|jervis|jarvis's|travis|jarviss|java's|jarv)\b(?!'s)/i
+  /(?<![\p{L}\p{N}])(?:(?:hey|hej|hi|ok|okay|yo|гей|хей|ей|эй|агов|привіт|окей|о\s?кей)[\s,]*)?(?:jarvis|jarvys|jervis|travis|jarviss|java's|jarv|джарвіс\p{L}*|джарвис\p{L}*|жарвіс\p{L}*|жарвис\p{L}*|джервіс\p{L}*|дарвіс\p{L}*)(?![\p{L}\p{N}'])/iu
 
 /** Everything after the wake phrase, which is usually the actual command. */
 function afterWake(text: string): string {
@@ -257,7 +257,7 @@ function makeAssembler(h: {
 const norm = (s: string) =>
   s
     .toLowerCase()
-    .replace(/[^a-z0-9' ]+/g, ' ')
+    .replace(/[^\p{L}\p{N}' ]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
@@ -267,7 +267,7 @@ const norm = (s: string) =>
  * would be the single most infuriating failure this file could have.
  */
 const OVERRIDE =
-  /\b(stop|wait|jarvis|cancel|enough|quiet|hold on|shut up|never ?mind|forget it|no)\b/i
+  /(?<![\p{L}\p{N}])(stop|wait|jarvis|cancel|enough|quiet|hold on|shut up|never ?mind|forget it|no|стоп|зачекай|почекай|стривай|досить|тихо|скасуй|ні|джарвіс\p{L}*|джарвис\p{L}*|жарвіс\p{L}*|жарвис\p{L}*|джервіс\p{L}*|дарвіс\p{L}*)(?![\p{L}\p{N}])/iu
 
 /**
  * Words too common to be evidence of anything.
@@ -760,7 +760,7 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
     rec = new Ctor()
     rec.continuous = true
     rec.interimResults = true
-    rec.lang = 'en-GB'
+    rec.lang = 'uk-UA'
     rec.onstart = () => {
       running = true
       diag.running = true

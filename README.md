@@ -1,6 +1,12 @@
 # J.A.R.V.I.S.
 
-A browser voice assistant with an Iron Man holographic interface. Say
+> **Українською:** покрокове встановлення для Mac і Windows в [INSTALL.uk.md](INSTALL.uk.md).
+>
+> This is an adapted version of [JARVIS by Aditya Dewaskar](https://github.com/adewaskar/jarvis)
+> (MIT): Ukrainian voice and wake word, a new start-up sequence, and optional
+> air-raid alerts.
+
+A browser voice assistant with its own animated interface. Say
 **"Hey Jarvis"**, he wakes, listens, and does real things through your tools —
 searches the web, generates images, drives your phone, reads your mail. The face
 is a web page (React + Vite + Three.js + custom GLSL). The brain is Claude Code,
@@ -25,7 +31,7 @@ can have — Node.js and Chrome. That's the whole list.
   or the platform installer at <https://docs.claude.com/en/docs/claude-code> —
   then run `claude` once and complete login. The bridge reuses that login. **No
   API key**, and usage is billed to your existing Claude account.
-- **Node.js 20 or newer** — free, one installer from <https://nodejs.org>. This
+- **Node.js 20.12 or newer** — free, one installer from <https://nodejs.org>. This
   is a Node web app, so it is the one unavoidable tool.
 - **Google Chrome or Microsoft Edge**, in a **real browser window** — not an
   embedded preview pane. Preview panes (including the one inside editors and
@@ -49,7 +55,7 @@ npm install
 npm start          # runs the brain and the face together
 ```
 
-Then open the URL it prints (http://localhost:5173) in **Chrome**, click **INITIALISE**, and say **“Hey Jarvis”**.
+Then open the URL it prints (http://localhost:5173) in **Chrome**, click **Запустити**, and say **“Hey Jarvis”**.
 
 Prefer two terminals? Run them separately instead:
 
@@ -69,13 +75,9 @@ Terminal 2 — the face:
 npm run dev
 ```
 
-Then open the app in a **real Chrome or Edge window**:
+Then open <http://localhost:5173> in a **real Chrome or Edge window**.
 
-```bash
-open http://localhost:5173
-```
-
-Click **INITIALISE**, allow the microphone when asked, and say **"Hey Jarvis"**.
+Click **Запустити**, allow the microphone when asked, and say **"Hey Jarvis"**.
 
 > It has to be a real browser window. Embedded preview panes block the
 > microphone, so JARVIS will look perfectly alive and simply never respond.
@@ -108,9 +110,9 @@ WebSocket (plus a few HTTP endpoints) on `ws://localhost:8787`.
 rest. The bridge can. And because it is the Agent SDK, it authenticates off your
 existing Claude Code login: no API key, billed to that same Claude account.
 
-**The model.** `claude-opus-5` at effort `medium` by default. Override with the
+**The model.** `claude-opus-5` at effort `high` by default. Override with the
 `JARVIS_MODEL` and `JARVIS_EFFORT` environment variables. On startup the bridge
-prints its choice, e.g. `[jarvis] model claude-opus-5 · effort medium`.
+prints its choice, e.g. `[jarvis] model claude-opus-5 · effort high`.
 
 ### The voice pipeline
 
@@ -164,6 +166,14 @@ A few things you can say:
 > account** are not stored on disk, so the bridge cannot see them — it works from
 > the servers in `~/.claude.json` (about 14), not the claude.ai ones.
 
+### JARVIS opens things on your computer
+
+*"Open Notes"*, *"open the sound settings"*, *"open github.com"*. The tools
+`open_app`, `open_settings` and `open_url` in `bridge/computer.mjs` work in the
+default read-only mode, because they only open a window. They cannot change a
+setting, run a command, type or click. On Windows `open_app` is limited to a
+fixed list of common programs.
+
 ### JARVIS controls the interface
 
 He drives the UI through MCP tools the bridge exposes:
@@ -207,10 +217,9 @@ chose.
 
 ## The boot sequence
 
-Power-up plays a four-beat Iron Man start-up (`src/ui/Boot.tsx`): an
-"INITIATING SYSTEM" status bar with a segmented progress bar and boot log; then
-concentric reticle rings resolving into "J.A.R.V.I.S"; then a suit schematic;
-then the triangular arc reactor lighting up — with a start-up sound under it
+Power-up plays a short start-up (`src/ui/Boot.tsx`): a target draws itself while
+the systems count up, an arrow hits the centre as the name lands, then the
+TARGET HUB logo opens out, with a start-up sound under it
 (`public/audio/boot-music.mp3`).
 
 ---
@@ -226,13 +235,19 @@ Everything is optional in bridge mode. Frontend settings live in `.env.local`
 |---|---|---|
 | `JARVIS_BRIDGE_PORT` | `8787` | Port for the WebSocket + HTTP endpoints |
 | `JARVIS_MODEL` | `claude-opus-5` | Model to run |
-| `JARVIS_EFFORT` | `medium` | Reasoning effort |
+| `JARVIS_EFFORT` | `high` | Reasoning effort |
 | `JARVIS_ALLOW_WRITES` | off | `1` allows effectful tools (see below) |
 | `JARVIS_ALLOWED_ORIGINS` | local dev | Extra WebSocket origins to accept |
 | `JARVIS_ALLOW_NO_ORIGIN` | off | Accept connections with no `Origin` header |
 | `JARVIS_FILE_ROOTS` | — | Roots the `/file` endpoint may serve from |
 | `JARVIS_VOICE_ID` | — | ElevenLabs voice id |
 | `ELEVENLABS_API_KEY` | — | Optional; enables the ElevenLabs voice + Scribe |
+| `JARVIS_STT_LANGUAGE` | detect | Language Scribe should expect, e.g. `uk` |
+| `JARVIS_ALERT_REGIONS` | automatic | Set the air-raid alert regions by hand; find ids with `npm run alerts:find`. Otherwise they come from the browser's location, via OpenStreetMap Nominatim |
+| `JARVIS_ALERT_CITY` | — | Place name on the alert badge |
+| `JARVIS_ALERT_CITY_IN` | — | The same in the locative, e.g. `у Полтаві`, for what he says |
+
+`npm start` loads these from `.env.bridge.local` if that file exists.
 
 ### Frontend (`.env.local`)
 
@@ -267,11 +282,11 @@ interface for a confirmation dialog, so the decision is made ahead of time in
 `settingSources: []`, which makes its own gate the only authority — filesystem
 settings and any global `bypassPermissions` cannot override it.
 
-To allow effectful tools (phone, browser driving, sending), run the bridge this
-way instead:
+To allow effectful tools (phone, browser driving, sending), start it this way
+instead:
 
 ```bash
-npm run bridge:writes
+npm start -- --writes
 ```
 
 > Read `decideTool()` before you do. *"Hey Jarvis, clean up my downloads folder"*
@@ -287,6 +302,9 @@ Press **T** for a one-line audio self-test.
 
 **No voice at all.** You must be in **Chrome or Edge**, in a **real browser
 window** (not an embedded preview), and you must have **allowed the microphone**.
+
+**Windows.** Driving your own Chrome (the `chrome_*` tools) relies on a Unix
+socket and is not supported on Windows yet. Everything else is meant to work.
 
 **Bridge not reachable.** Check that `npm run bridge` is still running in its
 terminal, and that nothing else is holding port `8787`.
@@ -311,5 +329,10 @@ All of this lives in `bridge/server.mjs`:
 MIT.
 
 The boot sound and any tracks in `public/audio/` ship with the project for the
-demo. If you go on to monetise something built on this, clearing the rights to
-that audio is your responsibility.
+demo; see `public/audio/CREDITS.md`. If you go on to monetise something built on
+this, clearing the rights to that audio is your responsibility.
+
+JARVIS is a name from Marvel's films. This is an unofficial fan-made project, not
+affiliated with or endorsed by Marvel or Disney.
+
+Place names for air-raid alerts: © OpenStreetMap contributors.

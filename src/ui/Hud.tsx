@@ -2,25 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useStore, accentFor, type Phase } from '../store'
 import { Suggestions } from './Suggestions'
-import { BladeSweep, Blades } from './Blades'
+import { AlertBadge } from './AlertBadge'
+import { Blades } from './Blades'
 import { Effects } from './Effects'
 import { Pointer } from './Pointer'
 import { GestureGuide } from './GestureGuide'
 
 const statusText: Record<Phase, string> = {
-  offline: 'OFFLINE',
-  boot: 'INITIALISING',
-  dormant: 'STANDBY — SAY “HEY JARVIS”',
-  waking: 'ONLINE',
-  listening: 'LISTENING',
-  thinking: 'PROCESSING',
-  tooling: 'ACCESSING SYSTEMS',
-  speaking: 'RESPONDING',
+  offline: 'Вимкнено',
+  boot: 'Запускаюсь',
+  dormant: 'Чекаю',
+  waking: 'На зв’язку',
+  listening: 'Слухаю',
+  thinking: 'Думаю',
+  tooling: 'Виконую',
+  speaking: 'Говорю',
 }
 
-function Corner({ at }: { at: 'tl' | 'tr' | 'bl' | 'br' }) {
-  return <div className={`corner corner-${at}`} />
-}
+/** How much of the voice each bar of the equaliser takes. */
+const EQ = [0.45, 0.8, 1, 0.65, 0.9, 0.5, 0.7]
 
 /* ------------------------------------------------------------------ decode */
 
@@ -177,41 +177,42 @@ export function Hud() {
 
   return (
     <div className="hud" style={{ ['--accent' as string]: colour }}>
-      {/* First in the tree on purpose. Everything after it is positioned with
-          `z-index: auto`, so paint order is document order and the sweep stays
-          behind the transcript and the panels without a z-index war. */}
-      <BladeSweep />
-
-      <Corner at="tl" />
-      <Corner at="tr" />
-      <Corner at="bl" />
-      <Corner at="br" />
-
       <header className="hud-top">
         {ui.chrome.brand && (
           <div className="brand">
-            <span className="brand-mark">J.A.R.V.I.S.</span>
-            <span className="brand-sub">Just A Rather Very Intelligent System</span>
+            <span className="brand-mark">JARVIS</span>
+            <span className="brand-sub">TARGET HUB</span>
           </div>
         )}
 
         <div className="status">
           <span className="dot" />
-          <span className="status-text">
-            {/* bootNote is the voice-model download readout. It is only ever
-                the right thing to show during boot — as a general fallback a
-                note that never got cleared (a stuck 'voice 97%') sits over
-                LISTENING and PROCESSING for the rest of the session. */}
-            {phase === 'boot' && bootNote ? bootNote : statusText[phase]}
-          </span>
+          {/* Keyed so each new state slides in. bootNote is the voice download
+              readout, only ever right during boot: as a general fallback a stuck
+              'voice 97%' would sit over everything else for the whole session. */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={phase}
+              className="status-text"
+              initial={{ y: 14, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -14, opacity: 0 }}
+              transition={{ duration: 0.16 }}
+            >
+              {phase === 'boot' && bootNote ? bootNote : statusText[phase]}
+            </motion.span>
+          </AnimatePresence>
         </div>
       </header>
+
+      {/* Outside the brand block, so hiding the chrome cannot hide a warning. */}
+      <AlertBadge />
 
       {/* Left rail: which integrations are live */}
       {ui.chrome.systems && (
         <aside className="rail rail-left">
-          <div className="rail-title">SYSTEMS</div>
-          {connected.length === 0 && <div className="rail-item dim">none linked</div>}
+          <div className="rail-title">Підключено</div>
+          {connected.length === 0 && <div className="rail-item dim">поки нічого</div>}
           {connected.map((c) => (
             <div key={c} className="rail-item">
               <span className="tick" />
@@ -220,18 +221,19 @@ export function Hud() {
           ))}
           <div className="rail-item">
             <span className="tick" />
-            Web
+            Інтернет
           </div>
         </aside>
       )}
 
-      {/* Right rail: live telemetry, mostly for flavour */}
-      <aside className="rail rail-right">
-        <div className="rail-title">SIGNAL</div>
-        <div className="meter">
-          <div className="meter-fill" style={{ height: `${level * 100}%` }} />
-        </div>
-        <div className="rail-item mono">{(level * 100).toFixed(0).padStart(3, '0')}%</div>
+      <aside className="rail rail-right" aria-hidden="true">
+        {EQ.map((weight, i) => (
+          <span
+            key={i}
+            className="eq-bar"
+            style={{ transform: `scaleY(${Math.min(1, 0.12 + level * weight * 1.5)})` }}
+          />
+        ))}
       </aside>
 
       <AnimatePresence>
@@ -253,18 +255,18 @@ export function Hud() {
           >
             <span className="tool-kicker">
               <span className="spinner" />
-              accessing
+              Працюю
             </span>
             <span className="tool-name">{activeTool.replace(/[_-]/g, ' ')}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Conversation log — last few turns, fading upward */}
+      {/* The last exchange only, so it stays clear of the rings. */}
       {ui.chrome.transcript && (
         <div className="log">
           <AnimatePresence initial={false}>
-            {turns.slice(-4).map((t) => (
+            {turns.slice(-2).map((t) => (
               <motion.div
                 key={t.id}
                 className={`log-line log-${t.role}`}
@@ -273,7 +275,7 @@ export function Hud() {
                 exit={{ opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 32 }}
               >
-                <span className="log-who">{t.role === 'user' ? 'YOU' : 'JARVIS'}</span>
+                <span className="log-who">{t.role === 'user' ? 'Ти' : 'Джарвіс'}</span>
                 {/* Only his half decodes. What the user said was never
                     transmitted from anywhere — dressing it up as machine
                     output would be a lie about where the words came from. */}
@@ -310,17 +312,19 @@ export function Hud() {
 
       {error && <div className="error">{error}</div>}
 
-      <footer className="hud-bottom">
+      {phase !== 'offline' && (
+        <footer className="hud-bottom">
         <span className="hint">
-          say <b>“hey jarvis”</b> · <kbd>Space</kbd> to talk · <kbd>G</kbd> hands
+          скажи <b>«Гей, Джарвіс»</b> · <kbd>Пробіл</kbd> говорити · <kbd>G</kbd> керування руками
           {voice && (
             <>
               {' · '}
-              <kbd>V</kbd> voice: {voice.replace(/\(.*?\)/g, '').trim()}
+              <kbd>V</kbd> голос: {voice.replace(/\(.*?\)/g, '').trim()}
             </>
           )}
         </span>
       </footer>
+      )}
 
       {/* Last, so a flash or a tear reads as being on the glass rather than
           underneath the chrome. It is pointer-events: none and unmounts the
@@ -332,7 +336,7 @@ export function Hud() {
       <Pointer />
       {(gestures || looking) && (
         <div className="hands-live">
-          {looking ? `LOOKING — ${looking.toUpperCase()}` : 'CAMERA ON · G TO STOP'}
+          {looking ? `ДИВЛЮСЬ: ${looking}` : 'КАМЕРА УВІМКНЕНА · G, ЩОБ ВИМКНУТИ'}
         </div>
       )}
       <GestureGuide live={gestures} />

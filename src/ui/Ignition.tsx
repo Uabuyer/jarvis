@@ -39,16 +39,9 @@ export function Ignition({ onStart }: { onStart: () => void }) {
 
   return (
     <button className="ignition" onClick={onStart}>
-      {/*
-        Spun by CSS rather than framer. As a motion element with
-        `repeat: Infinity` it was one of the things keeping the exit from ever
-        finishing — AnimatePresence waits for a leaving subtree's animations,
-        and an infinite one never ends.
-      */}
-      <span className="ignition-ring" />
       <span className="ignition-label">
-        <span className="ignition-word">INITIALISE</span>
-        <span className="ignition-sub">click, or clap, to power up</span>
+        <span className="ignition-word">Запустити</span>
+        <span className="ignition-sub">натисни або плесни в долоні</span>
       </span>
     </button>
   )

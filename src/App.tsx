@@ -14,7 +14,8 @@ import { listenForClap } from './lib/clap'
 import * as camera from './lib/camera'
 import * as kokoro from './lib/kokoro'
 import { TTS_ENGINE } from './config'
-import { forTool, attention } from './lib/fillers'
+import { forTool, attention, greeting } from './lib/fillers'
+import { startAlerts, locateForAlerts, subscribeAlerts, alertState, alertPlace } from './lib/alerts'
 import {
   ask,
   warm,
@@ -49,6 +50,23 @@ import { env } from './config'
 /** How long to wait for someone to start speaking after he wakes. Generous:
  *  people say his name and *then* think about what they wanted. */
 const AWAIT_SPEECH_MS = 14000
+/** Silence between the end of the start-up sound and his first words. */
+const GREETING_PAUSE_MS = 600
+
+/** What he says when an alert starts or ends, naming the place if it is set. */
+function alertLine(active: boolean): string {
+  const { city, cityIn } = alertPlace()
+  if (!active) {
+    if (cityIn) return `Сер, ${cityIn} відбій тривоги.`
+    return city ? `Сер, відбій тривоги: ${city}.` : 'Сер, відбій тривоги.'
+  }
+  const where = cityIn
+    ? `${cityIn[0].toUpperCase()}${cityIn.slice(1)} оголошено тривогу.`
+    : city
+      ? `Оголошено тривогу: ${city}.`
+      : 'Оголошено тривогу.'
+  return `Сер, увага! ${where} Прямуйте в укриття.`
+}
 
 /** After an answer, how long the mic stays open for a follow-up before he
  *  drops back to standby. Long enough that you don't have to say the name
@@ -63,11 +81,12 @@ const newId = () =>
 
 /** The same mishearings voice.ts accepts for the wake word — otherwise a turn
  *  that woke him as "travis" gets that word sent on to the model as a question. */
-const NAME = '(?:jarvis|jarvys|jervis|travis|jarviss|java\'s|jarv)'
+const NAME = '(?:jarvis|jarvys|jervis|travis|jarviss|java\'s|jarv|джарвіс\\p{L}*|джарвис\\p{L}*|жарвіс\\p{L}*|жарвис\\p{L}*|джервіс\\p{L}*|дарвіс\\p{L}*)'
+const PREFIX = 'hey|hej|hi|ok|okay|yo|гей|хей|ей|эй|агов|привіт|окей|о\\s?кей'
 /** A bare vocative — "Jarvis", "hey jarvis" — with nothing asked. */
-const BARE_NAME = new RegExp(`^(?:hey|hi|ok|okay|yo)?\\s*${NAME}[\\s,.!?]*$`, 'i')
+const BARE_NAME = new RegExp(`^(?:(?:${PREFIX})[\\s,]*)?${NAME}[\\s,.!?]*$`, 'iu')
 /** A leading vocative on a real command: "Jarvis, what's the weather". */
-const LEADING_NAME = new RegExp(`^(?:hey|hi|ok|okay|yo)?\\s*${NAME}\\b[\\s,.:!?-]*`, 'i')
+const LEADING_NAME = new RegExp(`^(?:(?:${PREFIX})[\\s,]*)?${NAME}(?![\\p{L}\\p{N}])[\\s,.:!?-]*`, 'iu')
 
 export default function App() {
   const store = useStore
@@ -83,6 +102,9 @@ export default function App() {
    */
   const turn = useRef(0)
   const booting = useRef(false)
+  const holdingForCue = useRef(false)
+  /** The alert state last told to the user. Null until the first reading. */
+  const alertAnnounced = useRef<boolean | null>(null)
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const voicePoll = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -221,7 +243,41 @@ export default function App() {
   // -- voice events ---------------------------------------------------------
 
   /** What the voice loop should do with what it hears, derived from phase. */
+  /**
+   * Speak an alert change, cutting off whatever he is doing. Holds back during
+   * start-up, where the check after the boot sound picks it up instead. Returns
+   * whether it spoke. An all clear is only said after an alert he announced.
+   */
+  const announceAlert = (): boolean => {
+    const a = alertState()
+    if (a.status !== 'active' && a.status !== 'clear') return false
+    const phase = store.getState().phase
+    if (phase === 'offline' || phase === 'boot' || holdingForCue.current) return false
+
+    const active = a.status === 'active'
+    const known = alertAnnounced.current
+    if (known === active) return false
+    alertAnnounced.current = active
+    if (known === null && !active) return false
+
+    clearIdle()
+    silence()
+    turn.current++
+    interrupt()
+    music.working(false)
+    sfx.play('error')
+    store.getState().setPhase('waking')
+    const line = createSpeaker()
+    speaker.current = line
+    line.say(alertLine(active))
+    void line.end()
+    listen(AWAIT_SPEECH_MS)
+    return true
+  }
+
   const mode = (): VoiceMode => {
+    // The microphone hears the boot sound, words and all. Not a command.
+    if (holdingForCue.current) return 'deaf'
     switch (store.getState().phase) {
       case 'offline':
       case 'boot':
@@ -357,6 +413,7 @@ export default function App() {
     // reason as the rest of the audio.
     music.enable()
     music.playBoot()
+    locateForAlerts()
     music.startAmbient()
 
     s.setPhase('boot')
@@ -487,11 +544,10 @@ export default function App() {
       }, 200)
     }
 
-    // Long enough for the four-beat start-up sequence in Boot.tsx to play —
-    // status bar, rings, suit schematic, reactor power-up — before the live
-    // interface takes over. Kept a touch under the boot cue so the music is
-    // still rising as the reactor lands.
-    await new Promise((r) => setTimeout(r, 9200)) // boot sequence
+    // Long enough for the four-beat start-up sequence in Boot.tsx to play,
+    // ending on the logo, before the live interface takes over. Still under the
+    // length of the boot cue, so the music is rising as the logo lands.
+    await new Promise((r) => setTimeout(r, 11000)) // boot sequence
     await warming
     store.getState().setConnected(connectedLabels())
     store.getState().setVoice(currentVoiceName())
@@ -524,8 +580,41 @@ export default function App() {
       onError: onVoiceError,
     })
 
+    holdingForCue.current = true
     store.getState().setPhase('dormant')
+
+    // The start-up sound has words in it and runs past the end of the boot
+    // sequence, so he stays deaf until it has finished and only then speaks.
+    await music.bootCueDone()
+    await new Promise((r) => setTimeout(r, GREETING_PAUSE_MS))
+    holdingForCue.current = false
+    if (store.getState().phase !== 'dormant') return
+
+    // An alert that is already on takes the greeting's place.
+    if (announceAlert()) return
+
+    // Say hello, then listen, because the greeting asks a question and the
+    // answer should not need his name in front of it. Same shape as onWake: not
+    // awaited, so the user can talk straight over it.
+    store.getState().setPhase('waking')
+    const hello = createSpeaker()
+    speaker.current = hello
+    hello.say(greeting())
+    void hello.end()
+    listen(AWAIT_SPEECH_MS)
   }
+
+  // -- city alerts ----------------------------------------------------------
+
+  useEffect(() => {
+    const stop = startAlerts()
+    const unsubscribe = subscribeAlerts(() => void announceAlert())
+    return () => {
+      unsubscribe()
+      stop()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // -- clap to start --------------------------------------------------------
 

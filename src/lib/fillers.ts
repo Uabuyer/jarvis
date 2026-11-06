@@ -19,34 +19,70 @@
 
 /** Said as soon as the first tool fires, before any answer exists. */
 const WORKING = [
-  'Working on it, sir.',
-  'Compiling.',
-  'Retrieving.',
-  'Accessing the archive.',
-  'Cross-referencing.',
-  'Running the query now.',
-  'Searching.',
-  'Under way.',
+  'Працюю, сер.',
+  'Збираю дані.',
+  'Отримую.',
+  'Відкриваю архів.',
+  'Звіряю.',
+  'Виконую запит.',
+  'Шукаю.',
+  'Виконується.',
 ]
 
 /** Acknowledging an order where no tool is involved. */
 const ACKNOWLEDGE = [
-  'As you wish, sir.',
-  'Very good, sir.',
-  'Certainly.',
-  'Understood.',
-  'Consider it done.',
-  'Directly, sir.',
+  'Як забажаєте, сер.',
+  'Добре, сер.',
+  'Звісно.',
+  'Зрозуміло.',
+  'Вважайте, що зроблено.',
+  'Негайно, сер.',
 ]
 
 /** Answering to his name, before the user has said what they want. */
 const ATTENTION = [
-  'Yes, sir?',
-  'Sir?',
-  'At your service, sir.',
-  'Standing by.',
-  'Awake, sir.',
+  'Так, сер?',
+  'Сер?',
+  'До ваших послуг, сер.',
+  'На зв’язку.',
+  'Я тут, сер.',
 ]
+
+/**
+ * Said once, when he finishes starting up. Every line ends on a question the
+ * user can answer straight away, because the microphone opens right after it.
+ * Unlike the routine lines above, these are meant to be playful.
+ */
+const GREETING_ANY = [
+  'Вітаю, сер. До роботи. Чим займемося сьогодні?',
+  'Вітаю, сер. Системи готові, бюджети чекають. З чого почнемо?',
+  'До ваших послуг, сер. Креативи самі себе не запустять. Що робимо?',
+]
+const GREETING_MORNING = [
+  'Доброго ранку, сер. Кава є, кабінети чекають. З чого почнемо?',
+  'Доброго ранку, сер. Подивимося, що там відкрутилось за ніч?',
+]
+const GREETING_DAY = [
+  'Доброго дня, сер. Як ваш день? Чим займемося?',
+]
+const GREETING_EVENING = [
+  'Добрий вечір, сер. Як пройшов ваш день? Чим займемося ввечері?',
+  'Добрий вечір, сер. Як день, у плюсі? Що ще зробимо сьогодні?',
+]
+const GREETING_NIGHT = [
+  'Ще не спите, сер? Нічні заливи самі себе не перевірять. Що робимо?',
+]
+
+/** A start-up line, weighted towards the current time of day. */
+export function greeting(hour = new Date().getHours()): string {
+  const timed =
+    hour < 5 ? GREETING_NIGHT
+    : hour < 12 ? GREETING_MORNING
+    : hour < 18 ? GREETING_DAY
+    : GREETING_EVENING
+  const pool = [...GREETING_ANY, ...timed, ...timed]
+  return pool[Math.floor(Math.random() * pool.length)]
+}
 
 /**
  * Avoids repeating the same phrase twice running, which is what makes canned
@@ -91,9 +127,10 @@ type Rule = {
   lines: string[]
 }
 
-const FOOTAGE = ['Assembling the footage.', 'Rendering the sequence.']
+const FOOTAGE = ['Збираю відео.', 'Рендерю послідовність.']
 
 const BY_TOOL: Rule[] = [
+  { server: /computer/, lines: ['Відкриваю.', 'Запускаю.'] },
   // Video sits above image because higgsfield and palmier both do either, so
   // the verb in the tool name is the only thing separating them — a rule on the
   // server alone would send every generate_video to "Rendering."
@@ -101,50 +138,50 @@ const BY_TOOL: Rule[] = [
   {
     server: /higgsfield|openrouter-image|dalle|flux|midjourney/,
     tool: /image|photo|thumbnail|render|upscale|seedream/,
-    lines: ['Rendering.', 'Composing it now.'],
+    lines: ['Рендерю.', 'Створюю.'],
   },
   // The editors, once the two rules that read the verb have had their turn.
   { server: /palmier|heygen|runway|descript/, lines: FOOTAGE },
   {
     server: /playwright|puppeteer|browserbase|chrome/,
     tool: /\bbrowser\b|navigate/,
-    lines: ['Opening the browser.', 'Navigating.'],
+    lines: ['Відкриваю браузер.', 'Переходжу.'],
   },
   {
     server: /android|\badb\b|simulator/,
     tool: /\bdevice\b|\bapk\b|\bphone\b/,
-    lines: ['Reaching the device.', 'Connecting to your phone.'],
+    lines: ['Звертаюсь до пристрою.', 'Підключаюсь до телефона.'],
   },
   {
     server: /gmail|\bmail\b/,
     tool: /gmail|\bmail\b|email|inbox/,
-    lines: ['Checking your mail.', 'Reading the inbox.'],
+    lines: ['Перевіряю пошту.', 'Читаю вхідні.'],
   },
   // Calendar keys off "calendar" alone. "event" used to live here, which is how
   // a Mixpanel event query came out as "Checking your calendar."
   {
     tool: /calendar|\bdiary\b|\bmeeting\b/,
-    lines: ['Checking your calendar.', 'Consulting the diary.'],
+    lines: ['Перевіряю календар.', 'Дивлюсь розклад.'],
   },
   {
     server: /elevenlabs|openai-tts/,
     tool: /speech|\bvoice\b|\btts\b|text_to_sound/,
-    lines: ['Synthesising.', 'Working on it, sir.'],
+    lines: ['Озвучую.', 'Працюю, сер.'],
   },
   {
     server: /spotify|sonos/,
     tool: /\bplay\b|\bmusic\b|playlist|\btrack\b/,
-    lines: ['Queuing it up.', 'Putting it on.'],
+    lines: ['Ставлю в чергу.', 'Вмикаю.'],
   },
   {
     server: /^home|homeassistant|\bhue\b|\bhass\b/,
     tool: /\blights?\b|thermostat|\bdimmer\b/,
-    lines: ['Adjusting it now.', 'Seeing to it, sir.'],
+    lines: ['Налаштовую.', 'Займаюсь цим, сер.'],
   },
   {
     server: /github|linear|jira|sentry/,
     tool: /\brepo\b|repository|\bissues?\b|pull_request|\bcommit\b/,
-    lines: ['Checking the repository.', 'Consulting the tracker.'],
+    lines: ['Перевіряю репозиторій.', 'Дивлюсь трекер.'],
   },
   // Also where the anonymously named analytics servers land — theirs are bare
   // UUIDs, so only the tool half says anything: Get-Report, Get-Events,
@@ -153,12 +190,12 @@ const BY_TOOL: Rule[] = [
   {
     server: /mixpanel|clarity|posthog|amplitude/,
     tool: /analytic|\bmetrics?\b|\breports?\b|\bevents?\b|cohort|funnel|dashboard|\bquery\b/,
-    lines: ['Running the query.', 'Pulling the figures.'],
+    lines: ['Виконую запит.', 'Отримую цифри.'],
   },
   {
     server: /\bexa\b|serper|serpapi|perplexity|tavily|brave/,
     tool: /search|\bweb\b|\bfetch\b|crawl|research/,
-    lines: ['Searching.', 'Consulting the record.'],
+    lines: ['Шукаю.', 'Перевіряю джерела.'],
   },
 ]
 

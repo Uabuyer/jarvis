@@ -44,6 +44,9 @@ function vendorWasm() {
   }
 }
 
+// Local secrets and voice settings for the bridge. Ignored by git via *.local.
+if (existsSync('.env.bridge.local')) process.loadEnvFile('.env.bridge.local')
+
 const writes = process.argv.includes('--writes')
 
 // A dim label per process, so the interleaved logs stay readable.
@@ -121,5 +124,5 @@ run('face', process.execPath, ['node_modules/vite/bin/vite.js'], '35', {})
 
 console.log(
   '\nWhen it says the dev server is ready, open the URL it prints in Chrome,\n' +
-    'click INITIALISE, and say "Hey Jarvis". Ctrl-C stops everything.\n',
+    'click Запустити, and say "Hey Jarvis". Ctrl-C stops everything.\n',
 )

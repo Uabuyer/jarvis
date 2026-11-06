@@ -2,11 +2,11 @@
   "name": "jarvis",
   "private": true,
   "version": "0.0.0",
-  "description": "A browser voice assistant with an Iron Man holographic interface, driven by Claude Code through a small Node bridge.",
+  "description": "A browser voice assistant with its own animated interface, driven by Claude Code through a small Node bridge.",
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.12"
   },
   "scripts": {
     "start": "node scripts/start.mjs",
@@ -15,7 +15,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "bridge": "node bridge/server.mjs",
-    "bridge:writes": "JARVIS_ALLOW_WRITES=1 node bridge/server.mjs",
+    "bridge:writes": "node bridge/server.mjs --writes",
+    "alerts:find": "node scripts/find-alert-region.mjs",
     "setup": "node scripts/setup.mjs"
   },
   "dependencies": {

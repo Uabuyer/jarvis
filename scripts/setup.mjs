@@ -26,19 +26,24 @@ console.log('------------------------------------------------------------');
 // --- Node version --------------------------------------------------------
 try {
   const major = Number(process.versions.node.split('.')[0]);
-  if (Number.isFinite(major) && major >= 20) {
-    line(tick, `Node.js ${process.versions.node} (20+ required).`);
+  const minor = Number(process.versions.node.split('.')[1]);
+  if (major > 20 || (major === 20 && minor >= 12)) {
+    line(tick, `Node.js ${process.versions.node} (20.12+ required).`);
   } else {
-    line(warn, `Node.js ${process.versions.node} is below 20. Please upgrade — the bridge needs Node 20 or newer.`);
+    line(warn, `Node.js ${process.versions.node} is too old. Please upgrade — JARVIS needs Node 20.12 or newer.`);
   }
 } catch {
-  line(warn, 'Could not read the Node.js version. JARVIS needs Node 20 or newer.');
+  line(warn, 'Could not read the Node.js version. JARVIS needs Node 20.12 or newer.');
 }
 
 // --- Claude CLI on PATH ---------------------------------------------------
 let claudeFound = false;
 try {
-  const res = spawnSync('claude', ['--version'], { encoding: 'utf8', timeout: 10000 });
+  // On Windows an npm-installed `claude` is a .cmd file, which only a shell finds.
+  const res =
+    process.platform === 'win32'
+      ? spawnSync('claude --version', { encoding: 'utf8', timeout: 10000, shell: true })
+      : spawnSync('claude', ['--version'], { encoding: 'utf8', timeout: 10000 });
   if (res.status === 0 && res.stdout) {
     claudeFound = true;
     line(tick, `Claude CLI found: ${res.stdout.trim()}`);
@@ -105,12 +110,12 @@ if (elSource) {
 
 // --- How to run ----------------------------------------------------------
 console.log('');
-console.log('To run JARVIS, open two terminals:');
-console.log('  1)  npm run bridge      # the brain (Claude Code, headless)');
-console.log('  2)  npm run dev         # the face (open http://localhost:5173 in Chrome)');
-console.log('');
-console.log('Then click INITIALISE and say "Hey Jarvis".');
-console.log('To let JARVIS take real actions (phone, browser, sending), run `npm run bridge:writes` instead of `npm run bridge`.');
+console.log('To run JARVIS:  npm start');
+console.log('Then open http://localhost:5173 in Chrome, click Запустити and say "Hey Jarvis".');
+console.log('To let JARVIS take real actions (phone, browser, sending), run `npm start -- --writes`.');
+if (process.platform === 'win32') {
+  console.log('On Windows, driving your Chrome is not supported yet. Everything else works.');
+}
 console.log('');
 
 process.exit(0);

@@ -3,12 +3,12 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import {
   EffectComposer,
   Bloom,
-  ChromaticAberration,
   Vignette,
   Noise,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import * as THREE from 'three'
+import { Backdrop } from './Backdrop'
 import { Core } from './Core'
 import { Particles } from './Particles'
 import { Orbits } from './Orbits'
@@ -25,21 +25,6 @@ const spinFor: Record<Phase, number> = {
   tooling: 3.6,
   speaking: 1.4,
 }
-
-/**
- * Surface displacement amplitude. Both states where nothing is happening get
- * the calm figure: 'offline' is the quietest moment in the whole piece — the
- * reactor hasn't been powered on yet — so it must not be the most agitated
- * thing on screen.
- */
-/*
- * Much lower than they were. At 0.13/0.26 on a unit sphere the displacement is
- * a quarter of the radius, which is not a reactor breathing — it is a potato.
- * The reference core is a clean circle whose surface only shimmers; the drama
- * belongs to the instrument rings around it, not to the silhouette.
- */
-const AMP_CALM = 0.035
-const AMP_LIVE = 0.085
 
 /**
  * Everything the three children animate from, in one mutable object.
@@ -63,10 +48,17 @@ export type Drive = {
   level: number
   /** Rotation multiplier for the drifting dust. */
   spin: number
-  /** Target displacement amplitude for the core surface. */
-  amp: number
   /** 0..1 power-up reveal — the ring assembles outwards from the centre. */
   open: number
+  /** How far each state's own motion has eased in, 0..1. See Core. */
+  modes: {
+    listen: number
+    think: number
+    tool: number
+    speak: number
+    /** 0..1 progress of the shockwave sent out by each state change. */
+    wave: number
+  }
   /**
    * The reactor slice of the ui state, already resolved and smoothed.
    *
@@ -112,7 +104,7 @@ function Rig() {
       color: new THREE.Color(phaseColor.offline),
       level: 0,
       spin: spinFor.offline,
-      amp: AMP_CALM,
+      modes: { listen: 0, think: 0, tool: 0, speak: 0, wave: 1 },
       open: 0,
       reactor: {
         color: new THREE.Color(phaseColor.offline),
@@ -130,6 +122,8 @@ function Rig() {
     () => ({ key: '', color: new THREE.Color() }),
     [],
   )
+
+  const lastPhase = useMemo<{ phase: Phase | null }>(() => ({ phase: null }), [])
 
   useFrame((state, dt) => {
     // Read imperatively rather than subscribing — see the note on Drive.
@@ -157,10 +151,21 @@ function Rig() {
     drive.reactor.visible = r.visible
 
     drive.spin += (spinFor[phase] - drive.spin) * Math.min(1, dt * 2)
-    drive.amp = phase === 'dormant' || phase === 'offline' ? AMP_CALM : AMP_LIVE
-    // Held shut until the reactor is powered on, so the ring builds itself out
-    // of the centre on the ignition click rather than simply appearing.
-    drive.open = phase === 'offline' ? 0.28 : phase === 'boot' ? 0.7 : 1.6
+
+    const ease = Math.min(1, dt * 4)
+    const m = drive.modes
+    m.listen += (Number(phase === 'listening' || phase === 'waking') - m.listen) * ease
+    m.think += (Number(phase === 'thinking') - m.think) * ease
+    m.tool += (Number(phase === 'tooling') - m.tool) * ease
+    m.speak += (Number(phase === 'speaking') - m.speak) * ease
+    if (lastPhase.phase !== phase) {
+      if (lastPhase.phase !== null) m.wave = 0
+      lastPhase.phase = phase
+    }
+    m.wave = Math.min(1, m.wave + dt * 0.95)
+    // Only part-revealed until it is powered on, so the outer rings arrive with
+    // the click rather than already being there.
+    drive.open = phase === 'offline' ? 0.75 : phase === 'boot' ? 0.9 : 1.6
 
     // Idle breathing so the orb is never completely still.
     const idle = phase === 'offline' ? 0.02 : phase === 'dormant' ? 0.05 : 0.12
@@ -176,15 +181,10 @@ function Rig() {
     state.camera.lookAt(0, 0, 0)
   })
 
-  // Nothing in here is lit: both the core and the dust are raw ShaderMaterials,
-  // which do not read the light list. The scene therefore has no lights at all.
-  //
-  // The tilted gyro rings that used to sit here are gone. Steeply tilted arcs
-  // crossing in front of a complete circle do not read as depth — they read as
-  // scratches on the lens, and as broken circles in a design whose whole
-  // subject is one unbroken one.
+  // Nothing in here is lit: every material is a raw shader, so there are no lights.
   return (
     <>
+      <Backdrop drive={drive} />
       <Core drive={drive} />
       <Particles drive={drive} />
       <Orbits />
@@ -202,38 +202,20 @@ export function Scene() {
     >
       <Rig />
       {/*
-        multisampling={0} on purpose. The default is 8, which allocates a
-        half-float MSAA target — at dpr 2 that is a 3200x1800 buffer — and there
-        is not one polygon edge in this scene for it to smooth: everything is
-        additive blobs, point sprites and lines, all of which are already
-        soft-edged by their own falloff and then blurred again by bloom.
-
-        Tone mapping is also deliberate, if less obviously so. EffectComposer
-        forces gl.toneMapping to NoToneMapping while it is mounted (there is no
-        prop for it), so the additive output clips instead of rolling off. That
-        hard clip to white is the neon look this piece wants — the sweep and the
-        rim are meant to blow out. If you ever want the filmic roll-off back,
-        add a <ToneMapping mode={ToneMappingMode.ACES_FILMIC} /> effect at the
-        end of this chain rather than touching the renderer.
+        multisampling={0}: every shape here is soft-edged by its own shader, so
+        an MSAA target would cost a lot and smooth nothing.
       */}
       <EffectComposer multisampling={0}>
-        {/* Bloom is what turns additive lines into "hologram". */}
-        <Bloom
-          intensity={1.15}
-          // A higher threshold keeps the mid-tones intact so the orb doesn't
-          // flatten into a solid white disc.
-          luminanceThreshold={0.22}
-          luminanceSmoothing={0.85}
+                <Bloom
+          intensity={0.75}
+          // High, so the ball keeps its surface instead of glowing into a disc.
+          luminanceThreshold={0.5}
+          luminanceSmoothing={0.7}
           mipmapBlur
           radius={0.72}
         />
-        <ChromaticAberration
-          offset={new THREE.Vector2(0.0009, 0.0012)}
-          radialModulation={false}
-          modulationOffset={0}
-        />
         <Noise opacity={0.035} blendFunction={BlendFunction.OVERLAY} />
-        <Vignette eskil={false} offset={0.22} darkness={0.95} />
+        <Vignette eskil={false} offset={0.3} darkness={0.6} />
       </EffectComposer>
     </Canvas>
   )

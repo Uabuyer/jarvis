@@ -196,6 +196,29 @@ export function playBoot() {
 }
 
 /**
+ * Resolves once the start-up sound has stopped, so speech can follow it.
+ *
+ * Listens for `pause` as well as `ended` because the dissolve pauses the clip
+ * just before its last frame, so `ended` usually never fires. The timeout is
+ * there for a stalled download: a stuck file must not cost him his greeting.
+ */
+export function bootCueDone(maxMs = 20000): Promise<void> {
+  const t = tracks.get('boot-music')
+  if (!t || t.el.paused || t.el.ended) return Promise.resolve()
+  return new Promise((resolve) => {
+    const timer = setTimeout(done, maxMs)
+    function done() {
+      clearTimeout(timer)
+      t!.el.removeEventListener('pause', done)
+      t!.el.removeEventListener('ended', done)
+      resolve()
+    }
+    t.el.addEventListener('pause', done)
+    t.el.addEventListener('ended', done)
+  })
+}
+
+/**
  * The opening music. Once, from the top, and then it is finished.
  *
  * The four-second fade this used to have made sense for a bed that ran all
