@@ -241,7 +241,7 @@ Everything is optional in bridge mode. Frontend settings live in `.env.local`
 | `JARVIS_ALLOW_NO_ORIGIN` | off | Accept connections with no `Origin` header |
 | `JARVIS_FILE_ROOTS` | — | Roots the `/file` endpoint may serve from |
 | `JARVIS_VOICE_ID` | — | ElevenLabs voice id |
-| `ELEVENLABS_API_KEY` | — | Optional; enables the ElevenLabs voice + Scribe |
+| `ELEVENLABS_API_KEY` | — | Enables the ElevenLabs voice + Scribe. `npm run voice` sets it for you |
 | `JARVIS_STT_LANGUAGE` | detect | Language Scribe should expect, e.g. `uk` |
 | `JARVIS_ALERT_REGIONS` | automatic | Set the air-raid alert regions by hand; find ids with `npm run alerts:find`. Otherwise they come from the browser's location, via OpenStreetMap Nominatim |
 | `JARVIS_ALERT_CITY` | — | Place name on the alert badge |

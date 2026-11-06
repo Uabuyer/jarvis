@@ -322,6 +322,12 @@ export function Hud() {
               <kbd>V</kbd> голос: {voice.replace(/\(.*?\)/g, '').trim()}
             </>
           )}
+          {voice && voice !== 'ElevenLabs' && (
+            <>
+              {' · кращий голос: '}
+              <kbd>npm run voice</kbd>
+            </>
+          )}
         </span>
       </footer>
       )}

@@ -17,6 +17,7 @@
     "bridge": "node bridge/server.mjs",
     "bridge:writes": "node bridge/server.mjs --writes",
     "alerts:find": "node scripts/find-alert-region.mjs",
+    "voice": "node scripts/voice.mjs",
     "setup": "node scripts/setup.mjs"
   },
   "dependencies": {

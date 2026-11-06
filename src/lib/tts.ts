@@ -178,7 +178,7 @@ function score(v: SpeechSynthesisVoice): number {
   let s = 0
 
   // He answers in Ukrainian, so a Ukrainian voice beats any English one.
-  if (/^uk/i.test(v.lang)) return 300
+  if (/^uk/i.test(v.lang)) return 300 + (/natural|online/.test(n) ? 50 : 0) + (n.includes('ostap') ? 10 : 0)
 
   // The macOS British male, and the closest thing to the character available
   // without leaving the machine.

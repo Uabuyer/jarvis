@@ -104,8 +104,8 @@ const elSource = findElevenLabsKey();
 if (elSource) {
   line(tick, `Premium voice available — ElevenLabs key found via ${elSource}.`);
 } else {
-  line(info, 'No ElevenLabs key found — JARVIS will use browser speech (that is completely fine).');
-  line(info, '  Optional: add ELEVENLABS_API_KEY for a better voice and Scribe transcription. The free tier is enough for a demo.');
+  line(warn, 'No ElevenLabs key yet. JARVIS will work, but the system voice sounds poor.');
+  line(info, '  Run `npm run voice` to connect a better voice and speech recognition.');
 }
 
 // --- How to run ----------------------------------------------------------
