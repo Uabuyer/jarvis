@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# A personal start-up sound, not part of the public project.
+public/audio/boot-music.mp3
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

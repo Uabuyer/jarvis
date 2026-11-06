@@ -11,7 +11,9 @@
  * is one you end up muting, and a muted assistant loses the sounds that
  * actually carry meaning — the wake tone, the tool tick, the completion chime.
  *
- * All of it is Kevin MacLeod (incompetech.com), CC BY 4.0 — free to use with
+ * boot-music is optional and not in the repository: a personal file at
+ * public/audio/boot-music.mp3, ignored by git. The bundled tracks are Kevin
+ * MacLeod (incompetech.com), CC BY 4.0 — free to use with
  * attribution and safe on a monetised channel, unlike the actual film score,
  * which would be claimed within a day of upload.
  *
