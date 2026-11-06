@@ -10,7 +10,6 @@ import { createSpeaker, cycleVoice, currentVoiceName } from './lib/tts'
 import * as sfx from './lib/sfx'
 import * as music from './lib/music'
 import * as hands from './lib/hands'
-import { listenForClap } from './lib/clap'
 import * as camera from './lib/camera'
 import * as kokoro from './lib/kokoro'
 import { TTS_ENGINE } from './config'
@@ -615,37 +614,6 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // -- clap to start --------------------------------------------------------
-
-  /**
-   * A clap brings him up, as an alternative to the button.
-   *
-   * Only while the ignition screen is showing, and torn down the moment he
-   * boots — the microphone is about to belong to the voice loop, and two
-   * analysers arguing over the same stream is how you get an assistant that
-   * hears half of what you say.
-   *
-   * Deliberately silent about failure. If the microphone is refused, or has not
-   * been granted yet, the button is still right there; announcing an error
-   * about a feature nobody asked for would be worse than quietly doing without.
-   */
-  useEffect(() => {
-    if (phase !== 'offline') return
-    let live: { stop: () => void } | null = null
-    let gone = false
-    void listenForClap(() => {
-      if (!gone) void powerOn()
-    }).then((l) => {
-      if (gone) l.stop()
-      else live = l
-    })
-    return () => {
-      gone = true
-      live?.stop()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase])
 
   // -- level pump + keys ----------------------------------------------------
 

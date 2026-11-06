@@ -772,24 +772,17 @@ body,
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 9vh;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.ignition-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  pointer-events: none;
 }
 
 .ignition-word {
   position: relative;
   overflow: hidden;
   padding: 15px 38px 16px;
+  border: 0;
   border-radius: 16px;
+  cursor: pointer;
+  pointer-events: auto;
   background: linear-gradient(120deg, #ffc42e, #ff8a1f);
   color: #150a02;
   font-family: var(--display);
@@ -811,12 +804,7 @@ body,
   animation: ignitionSheen 2.8s ease-in-out infinite;
 }
 
-.ignition-sub {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.ignition:hover .ignition-word {
+.ignition-word:hover {
   transform: scale(1.06);
   box-shadow: 0 16px 60px -8px rgba(255, 138, 31, 1);
 }
