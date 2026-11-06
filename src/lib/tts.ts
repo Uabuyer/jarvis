@@ -177,6 +177,9 @@ function score(v: SpeechSynthesisVoice): number {
   const n = v.name.toLowerCase()
   let s = 0
 
+  // He answers in Ukrainian, so a Ukrainian voice beats any English one.
+  if (/^uk/i.test(v.lang)) return 300
+
   // The macOS British male, and the closest thing to the character available
   // without leaving the machine.
   if (n.startsWith('daniel')) s += 100
@@ -212,7 +215,7 @@ const USABLE = 40
 export function candidateVoices(): SpeechSynthesisVoice[] {
   return speechSynthesis
     .getVoices()
-    .filter((v) => /^en/i.test(v.lang))
+    .filter((v) => /^(uk|en)/i.test(v.lang))
     .map((v) => ({ v, s: score(v) }))
     .filter((x) => x.s >= USABLE)
     .sort((a, b) => b.s - a.s)
@@ -477,7 +480,7 @@ export function createSpeaker(): Speaker {
       const u = new SpeechSynthesisUtterance(text)
       const voice = pickVoice()
       if (voice) u.voice = voice
-      u.lang = voice?.lang ?? 'en-GB'
+      u.lang = voice?.lang ?? 'uk-UA'
       // Deliberate, and deliberately invariant — the character's pace does not
       // change with stakes, and that steadiness is most of the effect. This
       // lands around 130 wpm, below the median for film dialogue.

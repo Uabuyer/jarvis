@@ -106,14 +106,14 @@ export async function startVad(h: VadHandlers): Promise<Vad> {
   } catch (err) {
     h.onError(
       err instanceof DOMException && err.name === 'NotAllowedError'
-        ? 'Microphone access denied — voice input is unavailable.'
+        ? 'Немає доступу до мікрофона, тому голосове керування не працює.'
         : 'No microphone available.',
     )
     return { stop: () => {}, setGuard: () => {}, live: () => false, meter: () => ({ energy: 0, floor: 0, threshold: 0, speaking: false }) }
   }
 
   if (typeof MediaRecorder === 'undefined') {
-    h.onError('This browser cannot record audio — voice input is unavailable.')
+    h.onError('Цей браузер не може записувати звук, тому голосове керування не працює.')
     return { stop: () => {}, setGuard: () => {}, live: () => false, meter: () => ({ energy: 0, floor: 0, threshold: 0, speaking: false }) }
   }
 

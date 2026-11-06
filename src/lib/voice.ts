@@ -393,7 +393,7 @@ export async function startVoice(h: VoiceHandlers): Promise<Voice> {
     diag.lastError = 'mic'
     h.onError(
       err instanceof DOMException && err.name === 'NotAllowedError'
-        ? 'Microphone access denied — voice input is unavailable.'
+        ? 'Немає доступу до мікрофона, тому голосове керування не працює.'
         : 'No microphone available.',
     )
     return { stop: () => {}, live: () => false }
@@ -773,7 +773,7 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
       if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
         stopped = true
         diag.running = false
-        h.onError('Microphone access was refused — voice input is unavailable.')
+        h.onError('Немає доступу до мікрофона, тому голосове керування не працює.')
       }
     }
     rec.onend = () => {
