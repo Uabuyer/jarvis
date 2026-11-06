@@ -33,7 +33,7 @@ import { useStore } from '../store'
  * mounting is not the dangerous direction; the fade-out is gone, and the boot
  * sequence takes the screen immediately anyway, so there is nothing to see.
  *
- * Only the button starts him: a click elsewhere on the screen does nothing.
+ * He starts from the button or a clap. A click elsewhere on the screen does nothing.
  */
 export function Ignition({ onStart }: { onStart: () => void }) {
   const phase = useStore((s) => s.phase)
@@ -44,6 +44,7 @@ export function Ignition({ onStart }: { onStart: () => void }) {
       <button className="ignition-word" onClick={onStart}>
         Запустити
       </button>
+      <span className="ignition-sub">натисни або плесни в долоні</span>
     </div>
   )
 }
