@@ -32,19 +32,17 @@ import { useStore } from '../store'
  * A plain conditional cannot strand anything. The fade-in survives because
  * mounting is not the dangerous direction; the fade-out is gone, and the boot
  * sequence takes the screen immediately anyway, so there is nothing to see.
- *
- * He starts from the button or a clap. A click elsewhere on the screen does nothing.
  */
 export function Ignition({ onStart }: { onStart: () => void }) {
   const phase = useStore((s) => s.phase)
   if (phase !== 'offline') return null
 
   return (
-    <div className="ignition">
-      <button className="ignition-word" onClick={onStart}>
-        Запустити
-      </button>
-      <span className="ignition-sub">натисни або плесни в долоні</span>
-    </div>
+    <button className="ignition" onClick={onStart}>
+      <span className="ignition-label">
+        <span className="ignition-word">Запустити</span>
+        <span className="ignition-sub">натисни або плесни в долоні</span>
+      </span>
+    </button>
   )
 }

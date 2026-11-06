@@ -769,22 +769,27 @@ body,
   inset: 0;
   z-index: 7;
   display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 9vh;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ignition-label {
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
   gap: 12px;
-  padding-bottom: 9vh;
-  pointer-events: none;
 }
 
 .ignition-word {
   position: relative;
   overflow: hidden;
   padding: 15px 38px 16px;
-  border: 0;
   border-radius: 16px;
-  cursor: pointer;
-  pointer-events: auto;
   background: linear-gradient(120deg, #ffc42e, #ff8a1f);
   color: #150a02;
   font-family: var(--display);
@@ -811,7 +816,7 @@ body,
   color: var(--muted);
 }
 
-.ignition-word:hover {
+.ignition:hover .ignition-word {
   transform: scale(1.06);
   box-shadow: 0 16px 60px -8px rgba(255, 138, 31, 1);
 }
