@@ -235,8 +235,12 @@ function pickVoice(): SpeechSynthesisVoice | null {
   const saved = localStorage.getItem(VOICE_PREF_KEY)
   if (saved) {
     const hit = all.find((v) => v.name === saved)
-    if (hit) return (cachedVoice = hit)
-    localStorage.removeItem(VOICE_PREF_KEY)
+    // An English voice saved earlier stays silent on Ukrainian text, so it only
+    // counts when the machine has no Ukrainian voice to use instead.
+    if (hit && (/^uk/i.test(hit.lang) || !all.some((v) => /^uk/i.test(v.lang)))) {
+      return (cachedVoice = hit)
+    }
+    if (!hit) localStorage.removeItem(VOICE_PREF_KEY)
   }
 
   cachedVoice = candidateVoices()[0] ?? all.find((v) => /^en/i.test(v.lang)) ?? null
@@ -479,8 +483,11 @@ export function createSpeaker(): Speaker {
 
       const u = new SpeechSynthesisUtterance(text)
       const voice = pickVoice()
-      if (voice) u.voice = voice
-      u.lang = voice?.lang ?? 'uk-UA'
+      // English voices read Cyrillic as silence, with no error and no warning.
+      // Asking for the language instead lets the system find a voice that can.
+      const unreadable = !!voice && /^en/i.test(voice.lang) && /[\u0400-\u04ff]/.test(text)
+      if (voice && !unreadable) u.voice = voice
+      u.lang = voice && !unreadable ? voice.lang : 'uk-UA'
       // Deliberate, and deliberately invariant — the character's pace does not
       // change with stakes, and that steadiness is most of the effect. This
       // lands around 130 wpm, below the median for film dialogue.
