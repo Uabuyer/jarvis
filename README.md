@@ -219,8 +219,8 @@ chose.
 
 Power-up plays a short start-up (`src/ui/Boot.tsx`): a target draws itself while
 the systems count up, an arrow hits the centre as the name lands, then the
-TARGET HUB logo opens out. A start-up sound is optional: put your own MP3 at
-`public/audio/boot-music.mp3` (ignored by git, see `public/audio/CREDITS.md`).
+TARGET HUB logo opens out, with a start-up sound under it
+(`public/audio/boot-music.mp3`).
 
 ---
 

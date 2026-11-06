@@ -1,6 +1,6 @@
 # Audio credits
 
-The bundled tracks are by **Kevin MacLeod** (incompetech.com), licensed
+`ambient.mp3` and `work.mp3` are by **Kevin MacLeod** (incompetech.com), licensed
 **Creative Commons Attribution 4.0**. Free to use commercially — including in a
 monetised YouTube video — provided the attribution below appears somewhere the
 audience can see it (a description box is fine).
@@ -28,10 +28,9 @@ tracks are in the same register and cost you a line of text instead.
 
 ## The start-up sound
 
-`boot-music.mp3` is not part of this repository, and the interface runs fine
-without it. To add a start-up sound, put your own MP3 at
-`public/audio/boot-music.mp3`. Git ignores that path, so use only audio you have
-the right to use.
+`boot-music.mp3` comes from the upstream project and contains a voice. Its author
+and licence are not confirmed, and it is not covered by the Kevin MacLeod credit
+above. Check its rights before using it in a video or a commercial project.
 
 ## Replacing them
 
