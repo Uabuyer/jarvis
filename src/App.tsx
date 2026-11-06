@@ -547,7 +547,7 @@ export default function App() {
     // Long enough for the four-beat start-up sequence in Boot.tsx to play,
     // ending on the logo, before the live interface takes over. Still under the
     // length of the boot cue, so the music is rising as the logo lands.
-    await new Promise((r) => setTimeout(r, 11000)) // boot sequence
+    await new Promise((r) => setTimeout(r, 8500)) // boot sequence
     await warming
     store.getState().setConnected(connectedLabels())
     store.getState().setVoice(currentVoiceName())
