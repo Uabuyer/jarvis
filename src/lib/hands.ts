@@ -831,6 +831,7 @@ export async function enableHands(): Promise<void> {
   if (running) return
   patchPointerCapture()
   const mine = ++generation
+  let stage = 'камера'
   try {
     /**
      * One shared camera, refcounted — see camera.ts.
@@ -841,6 +842,7 @@ export async function enableHands(): Promise<void> {
      * feature that had done nothing wrong.
      */
     video = await holdCamera()
+    stage = 'модель'
     await ensureModel()
 
     running = true
@@ -850,6 +852,7 @@ export async function enableHands(): Promise<void> {
   } catch (err) {
     diag.lastError = String((err as Error)?.message ?? err)
     disableHands()
+    if (err instanceof Error) err.message = `${stage}: ${err.message}`
     throw err
   }
 }

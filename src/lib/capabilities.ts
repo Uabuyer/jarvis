@@ -51,17 +51,22 @@ export async function probeCapabilities(): Promise<Capabilities> {
     probed = true
     return current
   }
-  try {
-    const res = await fetch(`${BRIDGE_HTTP_URL}/health`, {
-      signal: AbortSignal.timeout(3000),
-    })
-    if (res.ok) {
-      const h = (await res.json()) as { stt?: boolean; tts?: boolean }
-      current = { stt: Boolean(h.stt), tts: Boolean(h.tts) }
+  // The page is busy during boot, and one slow answer here would leave the whole
+  // session on the system voice, so it gets three tries.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(`${BRIDGE_HTTP_URL}/health`, {
+        signal: AbortSignal.timeout(3000),
+      })
+      if (res.ok) {
+        const h = (await res.json()) as { stt?: boolean; tts?: boolean }
+        current = { stt: Boolean(h.stt), tts: Boolean(h.tts) }
+        break
+      }
+    } catch {
+      // Bridge down or slow. If every try fails he stays on the browser engines.
     }
-  } catch {
-    // Bridge down or slow — stay on the browser engines rather than blocking
-    // boot on a health check that is only an optimisation.
+    await new Promise((r) => setTimeout(r, 400))
   }
   probed = true
   return current

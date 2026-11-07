@@ -16,7 +16,7 @@ new Image().src = LOGO
  * Runs on elapsed time, so a throttled background tab costs smoothness, never
  * order. App.tsx decides when the overlay ends; keep its wait longer than `logo`.
  */
-const T = { hit: 2700, logo: 6800 }
+const T = { hit: 2700, logo: 4300 }
 
 const NAME = 'JARVIS'
 const RINGS = [172, 128, 84, 40]

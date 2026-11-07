@@ -241,6 +241,21 @@ export function startAmbient() {
   set('ambient', LEVEL.ambient, 900)
 }
 
+/**
+ * Restarts the power-up music the browser refused to play.
+ *
+ * A clap is not a user gesture, so after a clap start the browser can block the
+ * tracks. The first real click or key press calls this.
+ */
+export function resumeAfterGesture() {
+  for (const cue of ['boot-music', 'ambient'] as const) {
+    const t = tracks.get(cue)
+    if (t && want[cue] > 0 && t.el.paused && !finished.has(cue)) {
+      void t.el.play().catch(() => {})
+    }
+  }
+}
+
 export function stopAll() {
   if (dissolve) {
     clearTimeout(dissolve)

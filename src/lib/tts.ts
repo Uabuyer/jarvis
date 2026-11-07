@@ -605,7 +605,9 @@ export function createSpeaker(): Speaker {
 
       let read: (() => number) | null = null
       const ctx = outputContext()
-      if (ctx) {
+      // Audio sent through a suspended context is silent, so it only goes through
+      // the analyser once the context is running.
+      if (ctx?.state === 'running') {
         try {
           const analyser = ctx.createAnalyser()
           analyser.fftSize = 256
@@ -757,8 +759,9 @@ async function fetchCloudAudio(text: string): Promise<string | null> {
         body: JSON.stringify({ text }),
       })
       if (res.ok) return URL.createObjectURL(await res.blob())
-    } catch {
-      /* fall through */
+      diag.lastError = `cloud-${res.status}`
+    } catch (err) {
+      diag.lastError = `cloud-${(err as Error)?.name ?? 'failed'}`
     }
   }
 

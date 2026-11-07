@@ -60,6 +60,37 @@ if (typeof window !== 'undefined') {
  * everyone still using it, and the symptom is another feature going blind for
  * reasons that have nothing to do with it.
  */
+/**
+ * Starts the video and waits until frames are really arriving.
+ *
+ * Safari can reject play() with an AbortError and then start playing anyway, so
+ * that rejection only counts as a failure if no frames follow it.
+ */
+function startPlaying(el: HTMLVideoElement): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let failure: unknown = null
+    const finish = () => {
+      clearTimeout(timer)
+      el.removeEventListener('playing', finish)
+      resolve()
+    }
+    const timer = setTimeout(() => {
+      el.removeEventListener('playing', finish)
+      reject(failure ?? new Error('The camera sent no picture.'))
+    }, 6000)
+    el.addEventListener('playing', finish)
+    el.play().then(finish, (err) => {
+      if ((err as Error)?.name !== 'AbortError') {
+        clearTimeout(timer)
+        el.removeEventListener('playing', finish)
+        reject(err)
+        return
+      }
+      failure = err
+    })
+  })
+}
+
 export async function holdCamera(): Promise<HTMLVideoElement> {
   holders++
   diag.holders = holders
@@ -70,11 +101,15 @@ export async function holdCamera(): Promise<HTMLVideoElement> {
       video: { width: 1280, height: 720, facingMode: 'user' },
     })
     const el = document.createElement('video')
-    el.autoplay = true
+    el.dataset.jarvisCamera = ''
     el.playsInline = true
     el.muted = true
+    // Safari will not reliably run a video that is outside the document.
+    el.style.cssText =
+      'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none'
+    document.body.appendChild(el)
     el.srcObject = stream
-    await el.play()
+    await startPlaying(el)
     video = el
     diag.open = true
     diag.lastError = ''
@@ -85,6 +120,10 @@ export async function holdCamera(): Promise<HTMLVideoElement> {
     holders = Math.max(0, holders - 1)
     diag.holders = holders
     diag.lastError = String((err as Error)?.message ?? err)
+    // Nothing is using this stream now, so the camera light has to go out.
+    stream?.getTracks().forEach((t) => t.stop())
+    stream = null
+    document.querySelectorAll('video[data-jarvis-camera]').forEach((v) => v.remove())
     throw err
   }
 }
@@ -98,6 +137,7 @@ export function releaseCamera(): void {
   if (video) {
     video.pause()
     video.srcObject = null
+    video.remove()
     video = null
   }
   // Stopping every track is what actually extinguishes the hardware light.

@@ -78,6 +78,12 @@ export async function listenForClap(onClap: () => void): Promise<ClapListener> {
   analyser.fftSize = 512
   analyser.smoothingTimeConstant = 0
   source.connect(analyser)
+  // Safari only feeds an analyser that leads to the output, so it goes there
+  // through a muted gain and the microphone is not played back.
+  const mute = ctx.createGain()
+  mute.gain.value = 0
+  analyser.connect(mute)
+  mute.connect(ctx.destination)
   const buf = new Float32Array(analyser.fftSize)
 
   const history: number[] = []

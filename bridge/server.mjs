@@ -915,6 +915,7 @@ const handleRequest = async (req, res) => {
         },
       )
       if (!upstream.ok) {
+        console.warn(`[jarvis] ElevenLabs speech failed: HTTP ${upstream.status}`)
         res.writeHead(upstream.status, cors)
         return res.end(await upstream.text())
       }

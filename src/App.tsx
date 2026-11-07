@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Scene } from './scene/Scene'
 import { Hud } from './ui/Hud'
 import { Boot } from './ui/Boot'
@@ -91,6 +91,7 @@ const LEADING_NAME = new RegExp(`^(?:(?:${PREFIX})[\\s,]*)?${NAME}(?![\\p{L}\\p{
 export default function App() {
   const store = useStore
   const phase = useStore((s) => s.phase)
+  const [soundLocked, setSoundLocked] = useState(false)
   const history = useRef<Msg[]>([])
   const speaker = useRef<ReturnType<typeof createSpeaker> | null>(null)
   const voice = useRef<Voice | null>(null)
@@ -270,8 +271,11 @@ export default function App() {
     const line = createSpeaker()
     speaker.current = line
     line.say(alertLine(active))
-    void line.end()
-    listen(AWAIT_SPEECH_MS)
+    void line.end().then(() => {
+      if (speaker.current !== line) return
+      speaker.current = null
+      listen(AWAIT_SPEECH_MS)
+    })
     return true
   }
 
@@ -547,7 +551,7 @@ export default function App() {
     // Long enough for the four-beat start-up sequence in Boot.tsx to play,
     // ending on the logo, before the live interface takes over. Still under the
     // length of the boot cue, so the music is rising as the logo lands.
-    await new Promise((r) => setTimeout(r, 11000)) // boot sequence
+    await new Promise((r) => setTimeout(r, 8500)) // boot sequence
     await warming
     store.getState().setConnected(connectedLabels())
     store.getState().setVoice(currentVoiceName())
@@ -569,6 +573,7 @@ export default function App() {
     // first turn already uses ElevenLabs when a key is present and the browser
     // fallback when it is not — no flag, no reload.
     await probeCapabilities()
+    store.getState().setVoice(currentVoiceName())
 
     // One voice loop, started once, running until the page closes.
     voice.current = await startVoice({
@@ -590,17 +595,21 @@ export default function App() {
     holdingForCue.current = false
     if (store.getState().phase !== 'dormant') return
 
-    // An alert that is already on takes the greeting's place.
-    if (announceAlert()) return
+    // An alert that is already on is said first, and he still greets.
+    const alertOn = alertState().status === 'active'
+    if (alertOn) alertAnnounced.current = true
 
     // Say hello, then listen, because the greeting asks a question and the
-    // answer should not need his name in front of it. Same shape as onWake: not
-    // awaited, so the user can talk straight over it.
+    // answer should not need his name in front of it. Listening starts after he
+    // finishes, so the microphone cannot hear the greeting and cut it off.
     store.getState().setPhase('waking')
     const hello = createSpeaker()
     speaker.current = hello
+    if (alertOn) hello.say(alertLine(true))
     hello.say(greeting())
-    void hello.end()
+    await hello.end()
+    if (speaker.current !== hello) return
+    speaker.current = null
     listen(AWAIT_SPEECH_MS)
   }
 
@@ -615,6 +624,23 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // -- sound after a clap start -----------------------------------------------
+
+  useEffect(() => {
+    if (!soundLocked) return
+    const unlock = () => {
+      setSoundLocked(false)
+      void sfx.unlockAudio()
+      music.resumeAfterGesture()
+    }
+    window.addEventListener('pointerdown', unlock, true)
+    window.addEventListener('keydown', unlock, true)
+    return () => {
+      window.removeEventListener('pointerdown', unlock, true)
+      window.removeEventListener('keydown', unlock, true)
+    }
+  }, [soundLocked])
 
   // -- clap to start --------------------------------------------------------
 
@@ -635,7 +661,14 @@ export default function App() {
     let live: { stop: () => void } | null = null
     let gone = false
     void listenForClap(() => {
-      if (!gone) void powerOn()
+      if (gone) return
+      // A clap is not a user gesture: unless the page has already been clicked,
+      // the browser may keep him silent until someone touches it.
+      const activation = (navigator as Navigator & {
+        userActivation?: { hasBeenActive: boolean }
+      }).userActivation
+      if (!activation?.hasBeenActive) setSoundLocked(true)
+      void powerOn()
     }).then((l) => {
       if (gone) l.stop()
       else live = l
@@ -710,8 +743,8 @@ export default function App() {
                 .getState()
                 .setError(
                   err?.name === 'NotAllowedError'
-                    ? 'Camera access denied — gesture control is unavailable.'
-                    : `Gesture control failed to start: ${err?.message ?? err}`,
+                    ? 'Немає доступу до камери, тому керування руками не працює.'
+                    : `Керування руками не запустилось (${err?.message ?? err})`,
                 )
             })
         }
